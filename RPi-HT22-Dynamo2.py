@@ -6,7 +6,7 @@ import board
 import adafruit_dht
 import boto3
 import threading
-from datetime import datetime
+from datetime import datetime, timedelta
 
 dhtDevice = adafruit_dht.DHT22(board.D4)
 # you can pass DHT22 use_pulseio=False if you wouldn't like to use pulseio.
@@ -15,6 +15,8 @@ dhtDevice = adafruit_dht.DHT22(board.D4)
 # dhtDevice = adafruit_dht.DHT22(board.D18, use_pulseio=False)
 
 class MyDb(object):
+
+    time.sleep(60)
 
 # Initial the dht device, with data pin connected to:
     dhtDevice = adafruit_dht.DHT22(board.D4)
@@ -36,13 +38,14 @@ class MyDb(object):
         )
 
         return response
-    def put(self, Sensor_Id='' , Temperature='', Humidity='', ReadTime=''):
+    def put(self, Sensor_Id='' , Temperature='', Humidity='', ReadTime='', TTL=''):
         self.table.put_item(
             Item={
                 'Sensor_Id':Sensor_Id,
                 'Temperature':Temperature,
                 'Humidity' :Humidity,
-                'ReadTime' :ReadTime
+                'ReadTime' :ReadTime,
+                'TTL' :TTL
             }
         )
 
@@ -76,13 +79,15 @@ class MyDb(object):
 def main():
     global counter
 
-    threading.Timer(interval=900, function=main).start()
+    threading.Timer(interval=600, function=main).start()
     obj = MyDb()
     temperature_c = dhtDevice.temperature
     temperature_f = temperature_c * (9 / 5) + 32
     humidity = dhtDevice.humidity
     now = datetime.now()
-    obj.put(Sensor_Id=(str(counter)+ " : " + str(now.strftime("%m-%d-%Y %H:%M:%S"))), Temperature=str(temperature_f), Humidity=str(humidity), ReadTime=str(now.strftime("%m-%d-%Y %H:%M:%S")))
+    orig = datetime.fromtimestamp(1425917335)
+    new = orig + timedelta(days=90)
+    obj.put(Sensor_Id=(str(counter)+ " : " + str(now.strftime("%m-%d-%Y %H:%M:%S"))), Temperature=str(temperature_f), Humidity=str(humidity), ReadTime=str(now.strftime("%m-%d-%Y %H:%M:%S")), TTL=int(new.timestamp()))
     counter = counter + 1
     print("Uploaded Sample on Cloud T:{},H{} ".format(temperature_f, humidity))
 

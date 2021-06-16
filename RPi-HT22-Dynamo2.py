@@ -85,7 +85,8 @@ def main():
     temperature_f = temperature_c * (9 / 5) + 32
     humidity = dhtDevice.humidity
     now = datetime.now()
-    orig = datetime.fromtimestamp(1425917335)
+    epoch_time = int(time.time())
+    orig = datetime.fromtimestamp(epoch_time)
     new = orig + timedelta(days=90)
     obj.put(Sensor_Id=(str(counter)+ " : " + str(now.strftime("%m-%d-%Y %H:%M:%S"))), Temperature=str(temperature_f), Humidity=str(humidity), ReadTime=str(now.strftime("%m-%d-%Y %H:%M:%S")), TTL=int(new.timestamp()))
     counter = counter + 1

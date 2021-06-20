@@ -18,7 +18,7 @@ class MyDb(object):
 
     time.sleep(60)
 
-# Initial the dht device, with data pin connected to:
+# Initialize the dht22 device, with data pin connected to 4:
     dhtDevice = adafruit_dht.DHT22(board.D4)
 
     def __init__(self, Table_Name='DHT'):
@@ -29,32 +29,19 @@ class MyDb(object):
 
         self.client = boto3.client('dynamodb')
 
-    @property
-    def get(self):
-        response = self.table.get_item(
-            Key={
-                'Sensor_Id':"1"
+    try:
+        def put(self, DHT22_ID='' , Temperature='', Humidity='', ReadTime='', TTL=''):
+            self.table.put_item(
+                    Item={
+                    'DHT22_ID':DHT22_ID,
+                    'Temperature':Temperature,
+                    'Humidity' :Humidity,
+                    'ReadTime' :ReadTime,
+                    'TTL' :TTL
             }
         )
-
-        return response
-    def put(self, Sensor_Id='' , Temperature='', Humidity='', ReadTime='', TTL=''):
-        self.table.put_item(
-            Item={
-                'Sensor_Id':Sensor_Id,
-                'Temperature':Temperature,
-                'Humidity' :Humidity,
-                'ReadTime' :ReadTime,
-                'TTL' :TTL
-            }
-        )
-
-    def delete(self,Sensor_Id=''):
-        self.table.delete_item(
-            Key={
-                'Sensor_Id': Sensor_Id
-            }
-        )
+    except:
+        print("could not write to dynamo")
 
     def describe_table(self):
         response = self.client.describe_table(
@@ -77,21 +64,22 @@ class MyDb(object):
 
 
 def main():
-    global counter
-
-    threading.Timer(interval=600, function=main).start()
-    obj = MyDb()
-    temperature_c = dhtDevice.temperature
-    temperature_f = temperature_c * (9 / 5) + 32
-    humidity = dhtDevice.humidity
-    now = datetime.now()
-    epoch_time = int(time.time())
-    orig = datetime.fromtimestamp(epoch_time)
-    new = orig + timedelta(days=90)
-    obj.put(Sensor_Id=(str(counter)+ " : " + str(now.strftime("%m-%d-%Y %H:%M:%S"))), Temperature=str(temperature_f), Humidity=str(humidity), ReadTime=str(now.strftime("%m-%d-%Y %H:%M:%S")), TTL=int(new.timestamp()))
-    counter = counter + 1
-    print("Uploaded Sample on Cloud T:{},H{} ".format(temperature_f, humidity))
-
+    try:
+        global counter
+        threading.Timer(interval=300, function=main).start()
+        obj = MyDb()
+        temperature_c = dhtDevice.temperature
+        temperature_f = temperature_c * (9 / 5) + 32
+        humidity = dhtDevice.humidity
+        now = datetime.now()
+        epoch_time = int(time.time())
+        orig = datetime.fromtimestamp(epoch_time)
+        new = orig + timedelta(days=90)
+        obj.put(DHT22_ID=(str(counter)+ " : " + str(now.strftime("%m-%d-%Y %H:%M:%S"))), Temperature=str(temperature_f), Humidity=str(humidity), ReadTime=str(now.strftime("%m-%d-%Y %H:%M:%S")), TTL=int(new.timestamp()))
+        counter = counter + 1
+        print("Uploaded Sample on Cloud T:{},H{} ".format(temperature_f, humidity))
+    except:
+        print("Something went wrong")
 
 if __name__ == "__main__":
     global counter

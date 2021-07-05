@@ -66,7 +66,7 @@ class MyDb(object):
 def main():
     try:
         global counter
-        threading.Timer(interval=300, function=main).start()
+        threading.Timer(interval=3600, function=main).start()
         obj = MyDb()
         temperature_c = dhtDevice.temperature
         temperature_f = temperature_c * (9 / 5) + 32
@@ -74,7 +74,7 @@ def main():
         now = datetime.now()
         epoch_time = int(time.time())
         orig = datetime.fromtimestamp(epoch_time)
-        new = orig + timedelta(days=90)
+        new = orig + timedelta(days=7)
         obj.put(DHT22_ID=(str(counter)+ " : " + str(now.strftime("%m-%d-%Y %H:%M:%S"))), Temperature=str(temperature_f), Humidity=str(humidity), ReadTime=str(now.strftime("%m-%d-%Y %H:%M:%S")), TTL=int(new.timestamp()))
         counter = counter + 1
         print("Uploaded Sample on Cloud T:{},H{} ".format(temperature_f, humidity))
